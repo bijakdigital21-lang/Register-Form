@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -87,19 +87,20 @@
             <input type="email" id="email" placeholder="contoh@email.com" required>
         </div>
         <div class="form-group">
-            <label for="phone">Nomor Telepon</label>
-            <input type="tel" id="phone" placeholder="081234567890" required>
+            <label for="phone">Nombor Telepon</label>
+            <input type="tel" id="phone" placeholder="0123456789" required>
         </div>
         <button type="submit" id="btnRegister">Register & Lanjut Pembayaran</button>
         <div id="errorMessage" class="error-message"></div>
     </form>
 </div>
 
+<!-- Firebase Modular SDK -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // Firebase Config milik Anda
+    // Firebase Config Anda
     const firebaseConfig = {
         apiKey: "AIzaSyDXc06B8WLtqjkG0aScBHrd3L3M-n_5okc",
         authDomain: "grammar-hub-6af80.firebaseapp.com",
@@ -110,69 +111,73 @@
         appId: "1:1092171234032:web:7cc8efefb812993500e035"
     };
 
-    // Inisialisasi Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Form element & state
     const form = document.getElementById('registrationForm');
     const btnRegister = document.getElementById('btnRegister');
     const errorMessage = document.getElementById('errorMessage');
 
+    // Fungsi untuk mengarahkan pengguna ke Klikwoi dengan data yang sudah diisi
+    function redirectToCheckout(name, email, phone) {
+        const checkoutId = "815c8e14-4c0a-42c5-a4e2-ef259c431149";
+        const baseUrl = "https://apps2.klikwoi.net/checkout";
+        
+        // Membina URL parameter standard yang disokong oleh borang checkout
+        const queryParams = new URLSearchParams({
+            id: checkoutId,
+            name: name,
+            full_name: name,
+            email: email,
+            phone: phone,
+            phone_no: phone
+        }).toString();
+
+        window.location.href = `${baseUrl}?${queryParams}`;
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Ambil nilai dari input
         const fullName = document.getElementById('fullName').value.trim();
         const email = document.getElementById('email').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const defaultPassword = "GH548267ie";
 
-        // Ubah tampilan tombol saat proses pembuatan akun
         btnRegister.disabled = true;
         btnRegister.innerText = "Memproses...";
         errorMessage.innerText = "";
 
         try {
-            // 1. Buat User Baru di Firebase Authentication
+            // 1. Cipta User di Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
             
-            // 2. Simpan nama pengguna ke profil Firebase Auth
+            // 2. Simpan Nama ke Profil User
             await updateProfile(userCredential.user, {
                 displayName: fullName
             });
 
-            // 3. Buat URL pembayaran Klikwoi dengan URL parameter (agar otomatis terisi)
-            const checkoutBaseUrl = "https://apps2.klikwoi.net/checkout";
-            const checkoutId = "815c8e14-4c0a-42c5-a4e2-ef259c431149";
-            
-            // Pengkodean query string agar aman untuk URL
-            const targetUrl = `${checkoutBaseUrl}?id=${checkoutId}&name=${encodeURIComponent(fullName)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
-
-            // 4. Redirect pengguna ke halaman pembayaran
-            window.location.href = targetUrl;
+            // 3. Terus bawa ke page pembayaran Klikwoi (Autofill data)
+            redirectToCheckout(fullName, email, phone);
 
         } catch (error) {
             console.error("Firebase Error:", error);
-            btnRegister.disabled = false;
-            btnRegister.innerText = "Register & Lanjut Pembayaran";
-
-            // Penanganan error umum Firebase Auth
+            
+            // Jika email sudah pernah mendaftar, tetap bawa terus ke pembayaran
             if (error.code === 'auth/email-already-in-use') {
-                errorMessage.innerText = "Email ini sudah terdaftar. Mengalihkan ke pembayaran...";
-                
-                // Jika email sudah terdaftar, langsung alihkan ke checkout
+                errorMessage.innerText = "Email sudah terdaftar. Mengalihkan ke pembayaran...";
                 setTimeout(() => {
-                    const checkoutBaseUrl = "https://apps2.klikwoi.net/checkout";
-                    const checkoutId = "815c8e14-4c0a-42c5-a4e2-ef259c431149";
-                    window.location.href = `${checkoutBaseUrl}?id=${checkoutId}&name=${encodeURIComponent(fullName)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
-                }, 1500);
-            } else if (error.code === 'auth/invalid-email') {
-                errorMessage.innerText = "Format email tidak valid.";
-            } else if (error.code === 'auth/weak-password') {
-                errorMessage.innerText = "Password terlalu lemah.";
+                    redirectToCheckout(fullName, email, phone);
+                }, 1000);
             } else {
-                errorMessage.innerText = "Gagal mendaftar: " + error.message;
+                btnRegister.disabled = false;
+                btnRegister.innerText = "Register & Lanjut Pembayaran";
+                
+                if (error.code === 'auth/invalid-email') {
+                    errorMessage.innerText = "Format email tidak sah.";
+                } else {
+                    errorMessage.innerText = "Gagal mendaftar: " + error.message;
+                }
             }
         }
     });
