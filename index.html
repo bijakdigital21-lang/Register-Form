@@ -1,203 +1,570 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Pendaftaran Pelanggan</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        h2 {
-            margin-top: 0;
-            color: #333333;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666666;
-            font-weight: bold;
-        }
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            border: none;
-            border-radius: 4px;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .error-message {
-            color: red;
-            font-size: 13px;
-            margin-top: 10px;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grammar Hub - Admin Customer Management</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+  </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
 
-<div class="card">
-    <h2>Pendaftaran Pelanggan</h2>
-    <form id="registrationForm">
-        <div class="form-group">
-            <label for="fullName">Nama Lengkap</label>
-            <input type="text" id="fullName" placeholder="Masukkan nama Anda" required>
+  <!-- LOGIN SECTION -->
+  <div id="loginSection" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-100">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 text-indigo-600 mb-4">
+          <i class="fa-solid fa-graduation-cap text-3xl"></i>
         </div>
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="contoh@email.com" required>
-        </div>
-        <div class="form-group">
-            <label for="phone">Nombor Telepon</label>
-            <input type="tel" id="phone" placeholder="0123456789" required>
-        </div>
-        <button type="submit" id="btnRegister">Register & Lanjut Pembayaran</button>
-        <div id="errorMessage" class="error-message"></div>
-    </form>
-</div>
+        <h1 class="text-2xl font-bold text-slate-900">Grammar Hub Admin</h1>
+        <p class="text-slate-500 text-sm mt-1">Sila log masuk untuk mengurus pelanggan</p>
+      </div>
 
-<!-- Firebase Modular SDK -->
-<script type="module">
+      <div id="loginError" class="hidden mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span id="loginErrorText">Ralat log masuk</span>
+      </div>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Email Admin</label>
+          <input type="email" id="adminEmail" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" placeholder="admin@grammarhub.com">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Kata Laluan</label>
+          <input type="password" id="adminPassword" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" placeholder="••••••••">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition shadow-lg shadow-indigo-200 flex justify-center items-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i> Log Masuk
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD SECTION -->
+  <div id="dashboardSection" class="hidden flex flex-col min-h-screen">
+    <!-- Navbar Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="bg-indigo-600 text-white p-2 rounded-lg font-bold"><i class="fa-solid fa-book-open"></i></span>
+          <h1 class="text-xl font-bold text-slate-900">Grammar Hub Admin</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="userDisplay" class="text-sm font-medium text-slate-600 hidden sm:inline">admin@grammarhub.com</span>
+          <button id="logoutBtn" class="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Keluar
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <!-- Top Action Bar -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Pusat Kawalan Pelanggan</h2>
+          <p class="text-slate-500 text-sm">Urus pendaftaran automatik, akses & log webhook Klikwoi</p>
+        </div>
+        <button id="btnSimulateWebhook" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow transition flex items-center gap-2">
+          <i class="fa-solid fa-bolt"></i> Simulasi Webhook Klikwoi
+        </button>
+      </div>
+
+      <!-- Key Metrics / Analytics Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg text-2xl">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500 font-medium">Jumlah Pelanggan</p>
+            <h3 id="statTotalCustomers" class="text-2xl font-bold text-slate-900">0</h3>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-2xl">
+            <i class="fa-solid fa-cart-shopping"></i>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500 font-medium">Jumlah Pembelian</p>
+            <h3 id="statTotalPurchases" class="text-2xl font-bold text-slate-900">0</h3>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-amber-50 text-amber-600 rounded-lg text-2xl">
+            <i class="fa-solid fa-user-plus"></i>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500 font-medium">Pelanggan Baharu (Hari Ini)</p>
+            <h3 id="statNewToday" class="text-2xl font-bold text-slate-900">0</h3>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-blue-50 text-blue-600 rounded-lg text-2xl">
+            <i class="fa-solid fa-shield-check"></i>
+          </div>
+          <div>
+            <p class="text-sm text-slate-500 font-medium">Akaun Firebase Aktif</p>
+            <h3 id="statFirebaseActive" class="text-2xl font-bold text-slate-900">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Panel: Customer List & Controls -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <h3 class="text-lg font-bold text-slate-900">Senarai Pelanggan</h3>
+          
+          <!-- Search & Filter -->
+          <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+            <input type="text" id="searchInput" placeholder="Cari nama, email atau no. telefon..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+          </div>
+        </div>
+
+        <!-- Table Responsive -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                <th class="p-4">Pelanggan</th>
+                <th class="p-4">Maklumat Pembelian</th>
+                <th class="p-4">Status Akaun</th>
+                <th class="p-4">Status Penghantaran</th>
+                <th class="p-4 text-center">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="customerTableBody" class="divide-y divide-slate-100 text-sm">
+              <tr>
+                <td colspan="5" class="p-8 text-center text-slate-400">Memuatkan data pelanggan...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section: Webhook Audit Logs -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-list-check text-indigo-600 mr-2"></i>Log Webhook & Audit Aktiviti</h3>
+          <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">Real-time Log</span>
+        </div>
+        <div class="bg-slate-900 text-slate-200 p-4 rounded-lg font-mono text-xs h-48 overflow-y-auto space-y-1" id="auditLogBox">
+          <div class="text-slate-500">[SYSTEM] Mengesan sambungan database...</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL: EDIT PELANGGAN -->
+  <div id="editModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-slate-900">Kemaskini Pelanggan</h3>
+        <button onclick="closeModal('editModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="editForm" class="space-y-4">
+        <input type="hidden" id="editDocId">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama</label>
+          <input type="text" id="editName" required class="w-full p-2.5 border rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email</label>
+          <input type="email" id="editEmail" required class="w-full p-2.5 border rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombor Telefon</label>
+          <input type="text" id="editPhone" required class="w-full p-2.5 border rounded-lg text-sm">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('editModal')" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SIMULASI WEBHOOK -->
+  <div id="webhookModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 border border-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-bolt text-amber-500 mr-2"></i>Simulasi Webhook Klikwoi</h3>
+        <button onclick="closeModal('webhookModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="webhookForm" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Pelanggan</label>
+          <input type="text" id="whName" required class="w-full p-2 border rounded-lg text-sm" placeholder="Ahmad Zaki">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email</label>
+            <input type="email" id="whEmail" required class="w-full p-2 border rounded-lg text-sm" placeholder="ahmad@example.com">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. Telefon</label>
+            <input type="text" id="whPhone" required class="w-full p-2 border rounded-lg text-sm" placeholder="60123456789">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Produk</label>
+            <select id="whProduct" class="w-full p-2 border rounded-lg text-sm">
+              <option value="Grammar Hub - Full Access">Grammar Hub - Full Access</option>
+              <option value="Grammar Hub - Basic Course">Grammar Hub - Basic Course</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Status Bayaran</label>
+            <select id="whStatus" class="w-full p-2 border rounded-lg text-sm">
+              <option value="PAID">PAID</option>
+              <option value="SUCCESS">SUCCESS</option>
+              <option value="FAILED">FAILED</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-4">
+          <button type="button" onclick="closeModal('webhookModal')" class="px-4 py-2 border rounded-lg text-sm text-slate-600 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Simulasi Hantar Webhook</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase JavaScript SDK (Modular Scripts) -->
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      updateDoc, 
+      doc, 
+      onSnapshot, 
+      query, 
+      orderBy, 
+      where, 
+      getDocs, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Firebase Config Anda
+    // Configuration Firebase
     const firebaseConfig = {
-        apiKey: "AIzaSyDXc06B8WLtqjkG0aScBHrd3L3M-n_5okc",
-        authDomain: "grammar-hub-6af80.firebaseapp.com",
-        databaseURL: "https://grammar-hub-6af80-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "grammar-hub-6af80",
-        storageBucket: "grammar-hub-6af80.firebasestorage.app",
-        messagingSenderId: "1092171234032",
-        appId: "1:1092171234032:web:7cc8efefb812993500e035"
+      apiKey: "AIzaSyDXc06B8WLtqjkG0aScBHrd3L3M-n_5okc",
+      authDomain: "grammar-hub-6af80.firebaseapp.com",
+      databaseURL: "https://grammar-hub-6af80-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "grammar-hub-6af80",
+      storageBucket: "grammar-hub-6af80.firebasestorage.app",
+      messagingSenderId: "1092171234032",
+      appId: "1:1092171234032:web:7cc8efefb812993500e035"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    const form = document.getElementById('registrationForm');
-    const btnRegister = document.getElementById('btnRegister');
-    const errorMessage = document.getElementById('errorMessage');
+    // Global App State
+    let customersData = [];
 
-    // Fungsi menyimpan data ke LocalStorage & mengarah ke Checkout
-    function saveAndRedirectToCheckout(name, email, phone) {
-        const checkoutId = "815c8e14-4c0a-42c5-a4e2-ef259c431149";
-        
-        // Structure data pembeli mengikut format standard platform checkout
-        const customerData = {
-            name: name,
-            full_name: name,
-            email: email,
-            phone: phone,
-            phone_no: phone,
-            mobile: phone
-        };
+    // --- AUTHENTICATION FLOW ---
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
+        document.getElementById('userDisplay').textContent = user.email;
+        addAuditLog(`Admin logged in: ${user.email}`);
+        listenToCustomers();
+      } else {
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('dashboardSection').classList.add('hidden');
+      }
+    });
 
-        // Simpan ke LocalStorage dan SessionStorage browser
-        try {
-            localStorage.setItem('checkout_customer', JSON.stringify(customerData));
-            localStorage.setItem('customer', JSON.stringify(customerData));
-            localStorage.setItem('user_info', JSON.stringify(customerData));
-            localStorage.setItem('checkout_name', name);
-            localStorage.setItem('checkout_email', email);
-            localStorage.setItem('checkout_phone', phone);
-            
-            sessionStorage.setItem('customer', JSON.stringify(customerData));
-        } catch (e) {
-            console.error("Storage Error:", e);
-        }
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('adminEmail').value;
+      const pass = document.getElementById('adminPassword').value;
+      const errBox = document.getElementById('loginError');
 
-        // Bawa ke URL Checkout dengan URL parameters sebagai fallback
-        const targetUrl = `https://apps2.klikwoi.net/checkout?id=${checkoutId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
-        
-        window.location.href = targetUrl;
+      try {
+        errBox.classList.add('hidden');
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        errBox.classList.remove('hidden');
+        document.getElementById('loginErrorText').textContent = "Log masuk gagal. Sila semak semula kredensial anda.";
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      signOut(auth);
+    });
+
+    // --- REALTIME FIRESTORE LISTENER ---
+    function listenToCustomers() {
+      const q = query(collection(db, "customers"), orderBy("purchaseDate", "desc"));
+      
+      onSnapshot(q, (snapshot) => {
+        customersData = [];
+        snapshot.forEach((doc) => {
+          customersData.push({ id: doc.id, ...doc.data() });
+        });
+        renderDashboard();
+      }, (error) => {
+        addAuditLog(`Error fetching customers: ${error.message}`);
+      });
     }
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const fullName = document.getElementById('fullName').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const defaultPassword = "GH548267ie";
+    // --- RENDER DASHBOARD & METRICS ---
+    function renderDashboard() {
+      const searchVal = document.getElementById('searchInput').value.toLowerCase();
+      
+      // Filter Search
+      const filtered = customersData.filter(c => 
+        (c.name && c.name.toLowerCase().includes(searchVal)) ||
+        (c.email && c.email.toLowerCase().includes(searchVal)) ||
+        (c.phone && c.phone.includes(searchVal))
+      );
 
-        btnRegister.disabled = true;
-        btnRegister.innerText = "Memproses...";
-        errorMessage.innerText = "";
+      // Render Table
+      const tbody = document.getElementById('customerTableBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Tiada rekod pelanggan ditemui.</td></tr>`;
+      } else {
+        tbody.innerHTML = filtered.map(item => `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-4">
+              <div class="font-semibold text-slate-900">${escapeHtml(item.name)}</div>
+              <div class="text-xs text-slate-500">${escapeHtml(item.email)}</div>
+              <div class="text-xs text-slate-500">${escapeHtml(item.phone)}</div>
+            </td>
+            <td class="p-4">
+              <div class="text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md inline-block mb-1">${escapeHtml(item.productName)}</div>
+              <div class="text-xs text-slate-400">${item.purchaseDate ? new Date(item.purchaseDate.seconds * 1000).toLocaleString('ms-MY') : '-'}</div>
+            </td>
+            <td class="p-4">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${item.accountStatus === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                <span class="w-1.5 h-1.5 rounded-full ${item.accountStatus === 'Active' ? 'bg-emerald-600' : 'bg-red-600'}"></span>
+                ${item.accountStatus || 'Active'}
+              </span>
+            </td>
+            <td class="p-4 space-y-1">
+              <div class="text-xs flex items-center gap-1.5 ${item.emailStatus === 'SENT' ? 'text-emerald-600' : 'text-slate-400'}">
+                <i class="fa-solid fa-envelope"></i> Email: ${item.emailStatus || 'PENDING'}
+              </div>
+              <div class="text-xs flex items-center gap-1.5 ${item.whatsappStatus === 'SENT' ? 'text-emerald-600' : 'text-slate-400'}">
+                <i class="fa-brands fa-whatsapp"></i> WA: ${item.whatsappStatus || 'PENDING'}
+              </div>
+            </td>
+            <td class="p-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button onclick="openEditModal('${item.id}')" title="Kemaskini" class="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button onclick="resendAccess('${item.id}')" title="Hantar Semula Akses" class="p-2 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+                <button onclick="toggleAccountStatus('${item.id}', '${item.accountStatus}')" title="${item.accountStatus === 'Active' ? 'Nyahaktifkan' : 'Aktifkan'}" class="p-2 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                  <i class="fa-solid fa-power-off"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
 
-        try {
-            // 1. Cipta User di Firebase Auth
-            const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
-            
-            // 2. Kemaskini Profil Firebase
-            await updateProfile(userCredential.user, {
-                displayName: fullName
-            });
+      // Update Analytics Counters
+      document.getElementById('statTotalCustomers').textContent = customersData.length;
+      document.getElementById('statTotalPurchases').textContent = customersData.length;
+      
+      const activeFirebase = customersData.filter(c => c.firebaseUid).length;
+      document.getElementById('statFirebaseActive').textContent = activeFirebase;
 
-            // 3. Simpan data & alih ke halaman pembayaran
-            saveAndRedirectToCheckout(fullName, email, phone);
+      const today = new Date().toDateString();
+      const newToday = customersData.filter(c => c.purchaseDate && new Date(c.purchaseDate.seconds * 1000).toDateString() === today).length;
+      document.getElementById('statNewToday').textContent = newToday;
+    }
 
-        } catch (error) {
-            console.error("Firebase Error:", error);
-            
-            // Jika akaun/email sudah wujud, terus alihkan ke checkout
-            if (error.code === 'auth/email-already-in-use') {
-                errorMessage.innerText = "Email sudah terdaftar. Mengalihkan ke pembayaran...";
-                setTimeout(() => {
-                    saveAndRedirectToCheckout(fullName, email, phone);
-                }, 1000);
-            } else {
-                btnRegister.disabled = false;
-                btnRegister.innerText = "Register & Lanjut Pembayaran";
-                
-                if (error.code === 'auth/invalid-email') {
-                    errorMessage.innerText = "Format email tidak sah.";
-                } else {
-                    errorMessage.innerText = "Gagal mendaftar: " + error.message;
-                }
-            }
-        }
+    // Search Input Event
+    document.getElementById('searchInput').addEventListener('input', renderDashboard);
+
+    // --- WEBHOOK SIMULATION & PROCESSING ---
+    document.getElementById('btnSimulateWebhook').addEventListener('click', () => {
+      document.getElementById('webhookModal').classList.remove('hidden');
     });
-</script>
 
+    document.getElementById('webhookForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      closeModal('webhookModal');
+
+      const payload = {
+        name: document.getElementById('whName').value,
+        email: document.getElementById('whEmail').value.trim().toLowerCase(),
+        phone: document.getElementById('whPhone').value.trim(),
+        productName: document.getElementById('whProduct').value,
+        paymentStatus: document.getElementById('whStatus').value,
+        timestamp: new Date()
+      };
+
+      await processWebhook(payload);
+    });
+
+    async function processWebhook(payload) {
+      addAuditLog(`[WEBHOOK] Received webhook payload for: ${payload.email}`);
+
+      // Filter Status
+      if (payload.paymentStatus !== "PAID" && payload.paymentStatus !== "SUCCESS") {
+        addAuditLog(`[WEBHOOK REJECTED] Payment status not PAID/SUCCESS (${payload.paymentStatus}).`);
+        return;
+      }
+
+      try {
+        // Prevent Duplication Check in Firestore
+        const q = query(collection(db, "customers"), where("email", "==", payload.email));
+        const querySnap = await getDocs(q);
+
+        if (!querySnap.empty) {
+          addAuditLog(`[DUPLICATE WARNING] Account already exists for: ${payload.email}`);
+          alert(`AMARAN: Pelanggan dengan email ${payload.email} sudah wujud dalam sistem!`);
+          return;
+        }
+
+        // Generate Random Password
+        const tempPassword = "GH#" + Math.random().toString(36).slice(-8);
+        const mockUid = "usr_" + Math.random().toString(36).substr(2, 9);
+
+        addAuditLog(`[AUTH] Simulated Firebase User Created for UID: ${mockUid}`);
+
+        // Save to Firestore
+        const customerRef = await addDoc(collection(db, "customers"), {
+          name: payload.name,
+          email: payload.email,
+          phone: payload.phone,
+          firebaseUid: mockUid,
+          productName: payload.productName,
+          purchaseDate: serverTimestamp(),
+          accountStatus: 'Active',
+          emailStatus: 'PENDING',
+          whatsappStatus: 'PENDING'
+        });
+
+        addAuditLog(`[FIRESTORE] Document created ID: ${customerRef.id}`);
+
+        // Simulate Notifications
+        await triggerEmailNotification(customerRef.id, payload.email, tempPassword);
+        await triggerWhatsAppNotification(customerRef.id, payload.phone);
+
+        addAuditLog(`[SUCCESS] Webhook fully processed for ${payload.email}`);
+
+      } catch (err) {
+        addAuditLog(`[ERROR] Webhook processing failed: ${err.message}`);
+      }
+    }
+
+    // --- NOTIFICATION SIMULATORS (Email & WhatsApp) ---
+    async function triggerEmailNotification(docId, email, tempPassword) {
+      addAuditLog(`[EMAIL] Sending login credentials to ${email}...`);
+      // Integration hook for Resend / Firebase Extension Email can be placed here
+      await updateDoc(doc(db, "customers", docId), { emailStatus: 'SENT' });
+      addAuditLog(`[EMAIL SUCCESS] Access email dispatched to ${email}`);
+    }
+
+    async function triggerWhatsAppNotification(docId, phone) {
+      addAuditLog(`[WHATSAPP] Dispatching WhatsApp confirmation to ${phone}...`);
+      // Integration hook for Fonnte / WhatsApp Business API can be placed here
+      await updateDoc(doc(db, "customers", docId), { whatsappStatus: 'SENT' });
+      addAuditLog(`[WHATSAPP SUCCESS] WhatsApp message sent to ${phone}`);
+    }
+
+    // --- CUSTOMER MANAGEMENT ACTIONS ---
+    window.openEditModal = (id) => {
+      const customer = customersData.find(c => c.id === id);
+      if (!customer) return;
+      document.getElementById('editDocId').value = customer.id;
+      document.getElementById('editName').value = customer.name || '';
+      document.getElementById('editEmail').value = customer.email || '';
+      document.getElementById('editPhone').value = customer.phone || '';
+      document.getElementById('editModal').classList.remove('hidden');
+    };
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editDocId').value;
+      const name = document.getElementById('editName').value;
+      const email = document.getElementById('editEmail').value.trim().toLowerCase();
+      const phone = document.getElementById('editPhone').value.trim();
+
+      try {
+        await updateDoc(doc(db, "customers", id), { name, email, phone });
+        addAuditLog(`[UPDATE] Updated details for Customer ID: ${id}`);
+        closeModal('editModal');
+      } catch (err) {
+        alert("Gagal mengemaskini pelanggan: " + err.message);
+      }
+    });
+
+    window.resendAccess = async (id) => {
+      const customer = customersData.find(c => c.id === id);
+      if (!customer) return;
+
+      if (confirm(`Hantar semula akses email & WhatsApp kepada ${customer.name}?`)) {
+        await triggerEmailNotification(id, customer.email, "GH#TempPass123");
+        await triggerWhatsAppNotification(id, customer.phone);
+        addAuditLog(`[RESEND] Resent access info to ${customer.email}`);
+      }
+    };
+
+    window.toggleAccountStatus = async (id, currentStatus) => {
+      const newStatus = currentStatus === 'Active' ? 'Disabled' : 'Active';
+      try {
+        await updateDoc(doc(db, "customers", id), { accountStatus: newStatus });
+        addAuditLog(`[STATUS CHANGE] Customer ${id} status set to ${newStatus}`);
+      } catch (err) {
+        alert("Gagal menukar status akaun: " + err.message);
+      }
+    };
+
+    // --- HELPER UTILITIES ---
+    window.closeModal = (modalId) => {
+      document.getElementById(modalId).classList.add('hidden');
+    };
+
+    function addAuditLog(msg) {
+      const logBox = document.getElementById('auditLogBox');
+      const timestamp = new Date().toLocaleTimeString();
+      const logItem = document.createElement('div');
+      logItem.textContent = `[${timestamp}] ${msg}`;
+      logBox.appendChild(logItem);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str ? str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      }) : '';
+    }
+  </script>
 </body>
 </html>
