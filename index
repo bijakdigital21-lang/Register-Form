@@ -1,1 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Pendaftaran Pelanggan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666666;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: red;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
 
+<div class="card">
+    <h2>Pendaftaran Pelanggan</h2>
+    <form id="registrationForm">
+        <div class="form-group">
+            <label for="fullName">Nama Lengkap</label>
+            <input type="text" id="fullName" placeholder="Masukkan nama Anda" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="contoh@email.com" required>
+        </div>
+        <div class="form-group">
+            <label for="phone">Nomor Telepon</label>
+            <input type="tel" id="phone" placeholder="081234567890" required>
+        </div>
+        <button type="submit" id="btnRegister">Register & Lanjut Pembayaran</button>
+        <div id="errorMessage" class="error-message"></div>
+    </form>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // Firebase Config milik Anda
+    const firebaseConfig = {
+        apiKey: "AIzaSyDXc06B8WLtqjkG0aScBHrd3L3M-n_5okc",
+        authDomain: "grammar-hub-6af80.firebaseapp.com",
+        databaseURL: "https://grammar-hub-6af80-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "grammar-hub-6af80",
+        storageBucket: "grammar-hub-6af80.firebasestorage.app",
+        messagingSenderId: "1092171234032",
+        appId: "1:1092171234032:web:7cc8efefb812993500e035"
+    };
+
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Form element & state
+    const form = document.getElementById('registrationForm');
+    const btnRegister = document.getElementById('btnRegister');
+    const errorMessage = document.getElementById('errorMessage');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Ambil nilai dari input
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const defaultPassword = "GH548267ie";
+
+        // Ubah tampilan tombol saat proses pembuatan akun
+        btnRegister.disabled = true;
+        btnRegister.innerText = "Memproses...";
+        errorMessage.innerText = "";
+
+        try {
+            // 1. Buat User Baru di Firebase Authentication
+            const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
+            
+            // 2. Simpan nama pengguna ke profil Firebase Auth
+            await updateProfile(userCredential.user, {
+                displayName: fullName
+            });
+
+            // 3. Buat URL pembayaran Klikwoi dengan URL parameter (agar otomatis terisi)
+            const checkoutBaseUrl = "https://apps2.klikwoi.net/checkout";
+            const checkoutId = "815c8e14-4c0a-42c5-a4e2-ef259c431149";
+            
+            // Pengkodean query string agar aman untuk URL
+            const targetUrl = `${checkoutBaseUrl}?id=${checkoutId}&name=${encodeURIComponent(fullName)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
+
+            // 4. Redirect pengguna ke halaman pembayaran
+            window.location.href = targetUrl;
+
+        } catch (error) {
+            console.error("Firebase Error:", error);
+            btnRegister.disabled = false;
+            btnRegister.innerText = "Register & Lanjut Pembayaran";
+
+            // Penanganan error umum Firebase Auth
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage.innerText = "Email ini sudah terdaftar. Mengalihkan ke pembayaran...";
+                
+                // Jika email sudah terdaftar, langsung alihkan ke checkout
+                setTimeout(() => {
+                    const checkoutBaseUrl = "https://apps2.klikwoi.net/checkout";
+                    const checkoutId = "815c8e14-4c0a-42c5-a4e2-ef259c431149";
+                    window.location.href = `${checkoutBaseUrl}?id=${checkoutId}&name=${encodeURIComponent(fullName)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
+                }, 1500);
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage.innerText = "Format email tidak valid.";
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage.innerText = "Password terlalu lemah.";
+            } else {
+                errorMessage.innerText = "Gagal mendaftar: " + error.message;
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
