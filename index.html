@@ -2,7 +2,8 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Sekat auto-zoom pada peranti mudah alih -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Pendaftaran Pengguna Firebase</title>
   <style>
     body {
@@ -10,9 +11,11 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       background-color: #f4f4f9;
       margin: 0;
+      /* Mencegah pergerakan melampau pada skrin */
+      touch-action: manipulation;
     }
     .card {
       background: white;
@@ -21,6 +24,7 @@
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       width: 100%;
       max-width: 360px;
+      box-sizing: border-box;
     }
     h2 {
       margin-top: 0;
@@ -41,16 +45,19 @@
       box-sizing: border-box;
       border: 1px solid #ccc;
       border-radius: 4px;
+      /* Font minimal 16px untuk elak browser auto-zoom bila tekan input */
+      font-size: 16px; 
     }
     button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       background-color: #007bff;
       color: white;
       border: none;
       border-radius: 4px;
       font-weight: bold;
       cursor: pointer;
+      font-size: 16px;
     }
     button:hover {
       background-color: #0056b3;
@@ -80,7 +87,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // Konfigurasi Firebase anda
     const firebaseConfig = {
       apiKey: "AIzaSyDXc06B8WLtqjkG0aScBHrd3L3M-n_5okc",
       authDomain: "grammar-hub-6af80.firebaseapp.com",
@@ -91,7 +97,6 @@
       appId: "1:1092171234032:web:7cc8efefb812993500e035"
     };
 
-    // Inisialisasi Firebase & Auth
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
