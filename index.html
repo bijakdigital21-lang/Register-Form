@@ -8,7 +8,6 @@
   <style>
     :root {
       --primary: #4F46E5;
-      --primary-hover: #4338CA;
       --bg: #F9FAFB;
       --card-bg: #FFFFFF;
       --text-main: #111827;
@@ -16,8 +15,6 @@
       --border: #E5E7EB;
       --success-bg: #DEF7EC;
       --success-text: #03543F;
-      --danger-bg: #FDE8E8;
-      --danger-text: #9B1C1C;
     }
 
     * {
@@ -40,11 +37,6 @@
 
     header {
       margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
     }
 
     h1 {
@@ -59,34 +51,13 @@
       margin-top: 4px;
     }
 
-    .badge {
-      background-color: #EEF2FF;
-      color: var(--primary);
-      font-weight: 600;
-      font-size: 12px;
-      padding: 6px 12px;
-      border-radius: 9999px;
-      border: 1px solid #C7D2FE;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
-    }
-
-    @media (min-width: 900px) {
-      .grid {
-        grid-template-columns: 350px 1fr;
-      }
-    }
-
     .card {
       background-color: var(--card-bg);
       border-radius: 12px;
       border: 1px solid var(--border);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       padding: 20px;
+      margin-bottom: 24px;
     }
 
     .card-title {
@@ -98,74 +69,24 @@
       gap: 8px;
     }
 
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    label {
-      display: block;
+    .info-box {
+      background: #F3F4F6;
+      border-left: 4px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 4px;
       font-size: 13px;
-      font-weight: 500;
       color: #374151;
-      margin-bottom: 6px;
+      margin-bottom: 16px;
     }
 
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
+    .code-box {
+      background: #1E293B;
+      color: #38BDF8;
+      padding: 12px 16px;
       border-radius: 8px;
-      font-size: 14px;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-
-    button {
-      width: 100%;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top: 8px;
-    }
-
-    button:hover {
-      background-color: var(--primary-hover);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .alert {
-      padding: 12px;
-      border-radius: 8px;
+      font-family: monospace;
       font-size: 13px;
-      margin-top: 14px;
-      display: none;
-    }
-
-    .alert-success {
-      background-color: var(--success-bg);
-      color: var(--success-text);
-      border: 1px solid #A7F3D0;
-    }
-
-    .alert-danger {
-      background-color: var(--danger-bg);
-      color: var(--danger-text);
-      border: 1px solid #F87171;
+      word-break: break-all;
     }
 
     .table-container {
@@ -210,34 +131,10 @@
       color: #047857;
     }
 
-    .code-box {
-      background: #1E293B;
-      color: #E2E8F0;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 12px;
-    }
-
     .empty-state {
       text-align: center;
       padding: 40px 20px;
       color: var(--text-muted);
-    }
-
-    .loader {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 0.8s linear infinite;
-      margin-right: 8px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -245,73 +142,58 @@
 
   <div class="container">
     <header>
-      <div>
-        <h1>Grammar Hub Admin</h1>
-        <p class="subtitle">Platform simulasi Webhook bayaran & rekod automatik akaun pelanggan</p>
-      </div>
-      <div class="badge">Default Password: GH548267ie</div>
+      <h1>Grammar Hub Admin</h1>
+      <p class="subtitle">Pengurusan Bayaran Webhook & Rekod Realtime Pelanggan</p>
     </header>
 
-    <div class="grid">
-      <!-- Form Webhook Payment Simulator -->
-      <div class="card">
-        <div class="card-title">
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          Simulasi Bayaran / Webhook
-        </div>
-        <form id="webhookForm">
-          <div class="form-group">
-            <label for="custName">Nama Pelanggan</label>
-            <input type="text" id="custName" placeholder="Contoh: Ahmad Zaki" required>
-          </div>
-          <div class="form-group">
-            <label for="custEmail">E-mel Pelanggan</label>
-            <input type="email" id="custEmail" placeholder="ahmad@example.com" required>
-          </div>
-          <div class="form-group">
-            <label for="custPhone">No. Telefon</label>
-            <input type="tel" id="custPhone" placeholder="0123456789" required>
-          </div>
-          <button type="submit" id="submitBtn">Proses Bayaran & Cipta User</button>
-        </form>
-
-        <div id="alertSuccess" class="alert alert-success"></div>
-        <div id="alertDanger" class="alert alert-danger"></div>
+    <!-- Card Panduan Integration Webhook -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        Status Integrasi Webhook Payment
       </div>
+      <div class="info-box">
+        Fungsi simulasi telah dibuang. Pendaftaran akaun user Firebase dilakukan secara manual di Firebase Console. Rekod di bawah dikemaskini secara automatik apabila menerima data bayaran dari Webhook Payment Gateway.
+      </div>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom: 8px; font-weight: 500;">
+        Contoh Webhook Endpoint URL (Setkan pada Payment Gateway anda):
+      </p>
+      <div class="code-box">
+        https://api.domainanda.com/webhook/payment
+      </div>
+    </div>
 
-      <!-- Customer Records Realtime Table -->
-      <div class="card">
-        <div class="card-title">
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-          Senarai Pelanggan Terdaftar (Realtime)
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Pelanggan</th>
-                <th>No. Telefon</th>
-                <th>Firebase UID</th>
-                <th>Status</th>
-                <th>Tarikh Bayaran</th>
-              </tr>
-            </thead>
-            <tbody id="customerTable">
-              <tr>
-                <td colspan="5" class="empty-state">Memuatkan data dari Firebase...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <!-- Customer Records Realtime Table -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+        Senarai Bayaran Pelanggan (Realtime)
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Pelanggan</th>
+              <th>No. Telefon</th>
+              <th>Transaction ID / Reference</th>
+              <th>Status</th>
+              <th>Tarikh Bayaran</th>
+            </tr>
+          </thead>
+          <tbody id="customerTable">
+            <tr>
+              <td colspan="5" class="empty-state">Memuatkan data dari Firebase...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
   <!-- Firebase Web SDK v9 -->
   <script type="module">
-    import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     // Konfigurasi Firebase Anda
     const firebaseConfig = {
@@ -324,91 +206,13 @@
       appId: "1:1092171234032:web:7cc8efefb812993500e035"
     };
 
-    // Init Utama
+    // Init Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const auth = getAuth(app);
 
-    // Init Aplikasi Sekunder (Supaya pendaftaran tidak mengganggu/mengubah sesi login admin sedia ada)
-    const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
-    const secondaryAuth = getAuth(secondaryApp);
-
-    const DEFAULT_PASSWORD = "GH548267ie";
-
-    // UI Elements
-    const form = document.getElementById('webhookForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const alertSuccess = document.getElementById('alertSuccess');
-    const alertDanger = document.getElementById('alertDanger');
     const customerTable = document.getElementById('customerTable');
 
-    function showAlert(type, msg) {
-      alertSuccess.style.display = 'none';
-      alertDanger.style.display = 'none';
-      if(type === 'success') {
-        alertSuccess.textContent = msg;
-        alertSuccess.style.display = 'block';
-      } else {
-        alertDanger.textContent = msg;
-        alertDanger.style.display = 'block';
-      }
-    }
-
-    // Process Form (Simulasi Webhook Trigger)
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const name = document.getElementById('custName').value.trim();
-      const email = document.getElementById('custEmail').value.trim();
-      const phone = document.getElementById('custPhone').value.trim();
-
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loader"></span> Mendaftarkan Pengguna...';
-
-      try {
-        let uid = null;
-
-        // 1. Cipta User di Firebase Authentication
-        try {
-          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, DEFAULT_PASSWORD);
-          const user = userCredential.user;
-          uid = user.uid;
-
-          // Update nama profil pengguna
-          await updateProfile(user, { displayName: name });
-        } catch (authErr) {
-          if (authErr.code === 'auth/email-already-in-use') {
-            // Jika e-mel dah ada, hasilkan ID unik berasaskan hash e-mel untuk rekod DB
-            uid = 'EXISTING_' + btoa(email).replace(/=/g, '');
-          } else {
-            throw authErr;
-          }
-        }
-
-        // 2. Simpan Data Pelanggan ke Firebase Realtime Database
-        const customerRef = ref(db, 'customers/' + uid);
-        await set(customerRef, {
-          uid: uid,
-          name: name,
-          email: email,
-          phone: phone,
-          status: 'Active',
-          paidAt: new Date().toISOString()
-        });
-
-        showAlert('success', `Akaun berjaya dicipta untuk ${email}! Password: ${DEFAULT_PASSWORD}`);
-        form.reset();
-
-      } catch (err) {
-        console.error(err);
-        showAlert('danger', 'Ralat: ' + err.message);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Proses Bayaran & Cipta User';
-      }
-    });
-
-    // Read Realtime Customer List
+    // Read Realtime Customer List daripada Firebase Database
     const customersRef = ref(db, 'customers');
     onValue(customersRef, (snapshot) => {
       const data = snapshot.val();
@@ -417,7 +221,7 @@
       if (!data) {
         customerTable.innerHTML = `
           <tr>
-            <td colspan="5" class="empty-state">Tiada rekod pelanggan setakat ini. Simulasikan bayaran di sebelah kiri.</td>
+            <td colspan="5" class="empty-state">Tiada rekod bayaran masuk setakat ini.</td>
           </tr>`;
         return;
       }
@@ -430,11 +234,11 @@
         rows.push(`
           <tr>
             <td>
-              <strong style="display:block; font-size:14px;">${c.name || 'N/A'}</strong>
+              <strong style="display:block; font-size:14px;">${c.name || 'Pelanggan'}</strong>
               <span style="font-size:12px; color:var(--text-muted);">${c.email}</span>
             </td>
             <td>${c.phone || '-'}</td>
-            <td><span class="code-box">${c.uid.substring(0, 10)}...</span></td>
+            <td><span style="font-family:monospace; font-size:12px;">${c.transactionId || c.uid || key}</span></td>
             <td><span class="status-tag">${c.status || 'Active'}</span></td>
             <td style="font-size:13px; color:var(--text-muted);">${dateFormatted}</td>
           </tr>
