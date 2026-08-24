@@ -118,22 +118,38 @@
     const btnRegister = document.getElementById('btnRegister');
     const errorMessage = document.getElementById('errorMessage');
 
-    // Fungsi untuk mengarahkan pengguna ke Klikwoi dengan data yang sudah diisi
-    function redirectToCheckout(name, email, phone) {
+    // Fungsi menyimpan data ke LocalStorage & mengarah ke Checkout
+    function saveAndRedirectToCheckout(name, email, phone) {
         const checkoutId = "815c8e14-4c0a-42c5-a4e2-ef259c431149";
-        const baseUrl = "https://apps2.klikwoi.net/checkout";
         
-        // Membina URL parameter standard yang disokong oleh borang checkout
-        const queryParams = new URLSearchParams({
-            id: checkoutId,
+        // Structure data pembeli mengikut format standard platform checkout
+        const customerData = {
             name: name,
             full_name: name,
             email: email,
             phone: phone,
-            phone_no: phone
-        }).toString();
+            phone_no: phone,
+            mobile: phone
+        };
 
-        window.location.href = `${baseUrl}?${queryParams}`;
+        // Simpan ke LocalStorage dan SessionStorage browser
+        try {
+            localStorage.setItem('checkout_customer', JSON.stringify(customerData));
+            localStorage.setItem('customer', JSON.stringify(customerData));
+            localStorage.setItem('user_info', JSON.stringify(customerData));
+            localStorage.setItem('checkout_name', name);
+            localStorage.setItem('checkout_email', email);
+            localStorage.setItem('checkout_phone', phone);
+            
+            sessionStorage.setItem('customer', JSON.stringify(customerData));
+        } catch (e) {
+            console.error("Storage Error:", e);
+        }
+
+        // Bawa ke URL Checkout dengan URL parameters sebagai fallback
+        const targetUrl = `https://apps2.klikwoi.net/checkout?id=${checkoutId}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`;
+        
+        window.location.href = targetUrl;
     }
 
     form.addEventListener('submit', async (e) => {
@@ -152,22 +168,22 @@
             // 1. Cipta User di Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
             
-            // 2. Simpan Nama ke Profil User
+            // 2. Kemaskini Profil Firebase
             await updateProfile(userCredential.user, {
                 displayName: fullName
             });
 
-            // 3. Terus bawa ke page pembayaran Klikwoi (Autofill data)
-            redirectToCheckout(fullName, email, phone);
+            // 3. Simpan data & alih ke halaman pembayaran
+            saveAndRedirectToCheckout(fullName, email, phone);
 
         } catch (error) {
             console.error("Firebase Error:", error);
             
-            // Jika email sudah pernah mendaftar, tetap bawa terus ke pembayaran
+            // Jika akaun/email sudah wujud, terus alihkan ke checkout
             if (error.code === 'auth/email-already-in-use') {
                 errorMessage.innerText = "Email sudah terdaftar. Mengalihkan ke pembayaran...";
                 setTimeout(() => {
-                    redirectToCheckout(fullName, email, phone);
+                    saveAndRedirectToCheckout(fullName, email, phone);
                 }, 1000);
             } else {
                 btnRegister.disabled = false;
