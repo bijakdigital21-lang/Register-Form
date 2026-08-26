@@ -1,132 +1,165 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8">
-  <!-- Sekat auto-zoom pada peranti mudah alih -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pendaftaran Pengguna Firebase</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background-color: #f4f4f9;
-      margin: 0;
-      /* Mencegah pergerakan melampau pada skrin */
-      touch-action: manipulation;
-    }
-    .card {
-      background: white;
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 360px;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin-top: 0;
-      color: #333;
-    }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: bold;
-      color: #555;
-    }
-    input[type="email"] {
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      /* Font minimal 16px untuk elak browser auto-zoom bila tekan input */
-      font-size: 16px; 
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    #message {
-      margin-top: 15px;
-      font-size: 14px;
-      word-wrap: break-word;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .warning-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .btn-register {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn-register:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="card">
-    <h2>Daftar Pengguna</h2>
-    <form id="registerForm">
-      <div class="form-group">
-        <label for="email">Emel Pengguna:</label>
-        <input type="email" id="email" placeholder="contoh@domain.com" required>
-      </div>
-      <button type="submit" id="btnRegister">Register</button>
-    </form>
-    <div id="message"></div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDXc06B8WLtqjkG0aScBHrd3L3M-n_5okc",
-      authDomain: "grammar-hub-6af80.firebaseapp.com",
-      databaseURL: "https://grammar-hub-6af80-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "grammar-hub-6af80",
-      storageBucket: "grammar-hub-6af80.firebasestorage.app",
-      messagingSenderId: "1092171234032",
-      appId: "1:1092171234032:web:7cc8efefb812993500e035"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    const defaultPassword = "GH548267ie";
-    const form = document.getElementById('registerForm');
-    const messageDiv = document.getElementById('message');
-    const btnRegister = document.getElementById('btnRegister');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const email = document.getElementById('email').value;
-      messageDiv.style.color = "blue";
-      messageDiv.textContent = "Sedang mendaftar...";
-      btnRegister.disabled = true;
-
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
-        const user = userCredential.user;
+    <div class="container">
+        <h2>Customer Registration</h2>
         
-        messageDiv.style.color = "green";
-        messageDiv.textContent = `Pengguna berjaya didaftarkan! (UID: ${user.uid})`;
-        form.reset();
-      } catch (error) {
-        messageDiv.style.color = "red";
-        messageDiv.textContent = `Ralat: ${error.message}`;
-      } finally {
-        btnRegister.disabled = false;
-      }
-    });
-  </script>
+        <!-- Nota Peringatan -->
+        <div class="warning-box">
+            <strong>⚠️ PERINGATAN PENTING</strong>
+            Sila pastikan semua maklumat customer diisi dengan tepat dan lengkap.<br>
+            Pastikan tiada sebarang kesilapan atau typo sebelum meneruskan pendaftaran.<br>
+            Pastikan alamat email yang diberikan adalah betul dan aktif.
+        </div>
+
+        <!-- Form Pendaftaran -->
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required placeholder="Masukkan nama penuh">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required placeholder="nama@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone NO:</label>
+                <input type="tel" id="phone" required placeholder="0123456789">
+            </div>
+
+            <button type="submit" class="btn-register" id="submitBtn">Register Now</button>
+        </form>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Konfigurasi Firebase anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXc06B8WLtqjkG0aScBHrd3L3M-n_5okc",
+            authDomain: "grammar-hub-6af80.firebaseapp.com",
+            databaseURL: "https://grammar-hub-6af80-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "grammar-hub-6af80",
+            storageBucket: "grammar-hub-6af80.firebasestorage.app",
+            messagingSenderId: "1092171234032",
+            appId: "1:1092171234032:web:7cc8efefb812993500e035"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const form = document.getElementById('registrationForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const defaultPassword = 'GH548257af';
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            try {
+                // Cuba daftar akaun dalam Firebase Auth & Database
+                const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
+                const user = userCredential.user;
+
+                await set(ref(db, 'customers/' + user.uid), {
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    createdAt: new Date().toISOString()
+                });
+            } catch (error) {
+                // Walaupun akaun dah wujud atau ada ralat lain, proses tetap diteruskan ke link tujuan
+                console.log("Firebase Notice:", error.message);
+            }
+
+            // ARAHAN UTAMA: Selepas selesai (atau jika berlaku ralat), terus paksa redirect ke link ini
+            window.location.href = "https://apps2.klikwoi.net/page/customer-registration-";
+        });
+    </script>
 </body>
 </html>
