@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendaftaran Pantas - Bijak Belajar</title>
-    <!-- Menggunakan Tailwind CSS untuk rekaan moden -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
     
-    <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
        (function(){
@@ -15,14 +19,24 @@
        })();
     </script>
 
-  <!-- Firebase SDK (Modular v10) -->
-    <script type="module">
+  <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Firebase Config Anda[cite: 1]
-        const firebaseConfig = {
+        // 1. Firebase Config untuk Paparan Admin & Pending List (admin-f72e5)
+        const adminFirebaseConfig = {
+    apiKey: "AIzaSyCxxEsifGhdkTj_3EOdjflPS__B_SKRSZY",
+    authDomain: "admin-f72e5.firebaseapp.com",
+    databaseURL: "https://admin-f72e5-default-rtdb.asia-southeast1.firebasedatabase.app", // Pastikan baris ini wujud!
+    projectId: "admin-f72e5",
+    storageBucket: "admin-f72e5.firebasestorage.app",
+    messagingSenderId: "523370880023",
+    appId: "1:523370880023:web:883b422a9611abb2889052"
+};
+
+        // 2. Firebase Config untuk Target User / Grammar Hub (grammar-hub-6af80)
+        const targetFirebaseConfig = {
             apiKey: "AIzaSyDXc06B8WLtqjkG0aScBHrd3L3M-n_5okc",
             authDomain: "grammar-hub-6af80.firebaseapp.com",
             databaseURL: "https://grammar-hub-6af80-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -32,156 +46,450 @@
             appId: "1:1092171234032:web:7cc8efefb812993500e035"
         };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+        // Initialize Admin Firebase App (Primary)
+        const adminApp = initializeApp(adminFirebaseConfig, "AdminApp");
+        const adminAuth = getAuth(adminApp);
+        const adminDb = getDatabase(adminApp);
 
-        // Letakkan fungsi handleRegister dalam skop global supaya boleh diakses oleh onsubmit form
+        // Initialize Target Grammar Hub Firebase App (Secondary)
+        const targetApp = initializeApp(targetFirebaseConfig, "TargetApp");
+        const targetAuth = getAuth(targetApp);
+        const targetDb = getDatabase(targetApp);
+
+        // 1. Handle Pendaftaran & Simpan Live ke Firebase Realtime Database Admin (Pending)
         window.handleRegister = async function(event) {
-            // Halang borang daripada 'submit' cara biasa
             event.preventDefault();
 
-            // Ubah button jadi loading / nyahaktifkan seketika untuk elakkan double-click
             const submitBtn = event.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerText = "Memproses...";
 
-            // Ambil data customer
             const custNama = document.getElementById('cust_nama').value;
             const custEmail = document.getElementById('cust_email').value;
             const custNofon = document.getElementById('cust_nofon').value;
-            const defaultPassword = "GH548257af";
+            
+            const resNama = document.getElementById('res_nama').value;
+            const resEmail = document.getElementById('res_email').value;
+            const resNofon = document.getElementById('res_nofon').value;
 
-            // Ambil data reseller untuk dibawa ke page BCL nanti
-            const resellerNama = document.getElementById('reseller_nama').value;
-            const resellerEmail = document.getElementById('reseller_email').value;
-            const resellerNofon = document.getElementById('reseller_nofon').value;
+            const defaultPassword = "GH548257af";
+            const requestId = 'req_' + Date.now();
+
+            const newRequest = {
+                id: requestId,
+                nama: custNama,
+                email: custEmail,
+                nofon: custNofon,
+                reseller_nama: resNama,
+                reseller_email: resEmail,
+                reseller_nofon: resNofon,
+                password: defaultPassword,
+                date: new Date().toLocaleString()
+            };
 
             try {
-                // 1. Create User di Firebase Authentication menggunakan emel customer
-                const userCredential = await createUserWithEmailAndPassword(auth, custEmail, defaultPassword);
-                const user = userCredential.user;
+                // Simpan ke admin database di bawah node 'pending_users'
+                await set(ref(adminDb, 'pending_users/' + requestId), newRequest);
+                
+                const baseUrl = "https://bijakbelajar.bcl.my/form/customer-registration";
+                const targetUrl = `${baseUrl}?name=${encodeURIComponent(resNama)}&email=${encodeURIComponent(resEmail)}&phone=${encodeURIComponent(resNofon)}`;
+                
+                window.location.href = targetUrl;
+            } catch (error) {
+                console.error("Ralat menyimpan data:", error);
+                alert("Gagal menghantar pendaftaran: " + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Register & Teruskan";
+            }
+        }
 
-                // 2. Simpan maklumat tambahan customer dalam Firebase Realtime Database
-                await set(ref(db, 'users/' + user.uid), {
-                    nama: custNama,
-                    email: custEmail,
-                    nofon: custNofon,
-                    reseller_rujukan: resellerNama,
+        // 2. Fungsi Admin Login (Menggunakan Admin Auth)
+        window.checkAdminLogin = async function() {
+            const email = document.getElementById('admin_email').value;
+            const pass = document.getElementById('admin_pass').value;
+
+            if (!email || !pass) {
+                alert("Sila masukkan email dan password admin.");
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(adminAuth, email, pass);
+                document.getElementById('login_section').classList.add('hidden');
+                document.getElementById('admin_dashboard').classList.remove('hidden');
+                
+                initRealtimeListeners();
+            } catch (error) {
+                console.error("Ralat Log Masuk:", error);
+                alert("Log Masuk Gagal: " + error.message);
+            }
+        }
+
+        window.closeAdmin = function() {
+            document.getElementById('admin_modal').classList.add('hidden');
+            document.getElementById('admin_pass').value = '';
+            document.getElementById('admin_email').value = '';
+        }
+
+        window.openAdminModal = function() {
+            document.getElementById('admin_modal').classList.remove('hidden');
+            document.getElementById('login_section').classList.remove('hidden');
+            document.getElementById('admin_dashboard').classList.add('hidden');
+        }
+
+        window.switchTab = function(tabName) {
+            const pendingSec = document.getElementById('section_pending');
+            const approvedSec = document.getElementById('section_approved');
+            const tabPendingBtn = document.getElementById('tab_pending_btn');
+            const tabApprovedBtn = document.getElementById('tab_approved_btn');
+
+            if (tabName === 'pending') {
+                pendingSec.classList.remove('hidden');
+                approvedSec.classList.add('hidden');
+                tabPendingBtn.className = "px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow";
+                tabApprovedBtn.className = "px-4 py-2 text-xs font-bold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300";
+            } else {
+                pendingSec.classList.add('hidden');
+                approvedSec.classList.remove('hidden');
+                tabApprovedBtn.className = "px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow";
+                tabPendingBtn.className = "px-4 py-2 text-xs font-bold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300";
+            }
+        }
+
+        function initRealtimeListeners() {
+            onValue(ref(adminDb, 'pending_users'), (snapshot) => {
+                const data = snapshot.val();
+                loadPendingTable(data);
+            });
+
+            onValue(ref(adminDb, 'approved_users'), (snapshot) => {
+                const data = snapshot.val();
+                loadApprovedTable(data);
+            });
+        }
+
+        function loadPendingTable(data) {
+            const tbody = document.getElementById('pending_table_body');
+            tbody.innerHTML = '';
+
+            if (!data || Object.keys(data).length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-500">Tiada senarai menunggu.</td></tr>`;
+                return;
+            }
+
+            Object.entries(data).forEach(([key, user]) => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="py-3 px-4">
+                        <span class="font-semibold text-slate-800">${user.nama}</span><br>
+                        <span class="text-xs text-slate-500">${user.email} (${user.nofon})</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="font-medium text-blue-600">${user.reseller_nama || '-'}</span><br>
+                        <span class="text-xs text-slate-400">${user.reseller_email || ''} (${user.reseller_nofon || ''})</span>
+                    </td>
+                    <td class="py-3 px-4 text-xs text-slate-500">${user.date}</td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="inline-flex items-center space-x-3">
+                            <button onclick="approveUser('${key}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg shadow">Approve</button>
+                            <button onclick="rejectUser('${key}')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3 py-1.5 rounded-lg shadow">Reject</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function loadApprovedTable(data) {
+            const tbody = document.getElementById('approved_table_body');
+            tbody.innerHTML = '';
+
+            if (!data || Object.keys(data).length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-500">Tiada rekod yang telah diluluskan.</td></tr>`;
+                return;
+            }
+
+            Object.values(data).reverse().forEach((user) => {
+                const rawMsg = `🎉 TERIMA KASIH ATAS PEMBELIAN ANDA!
+
+Terima kasih kerana memilih Grammar Hub! 💙
+
+Kami sangat teruja untuk anda mula belajar, berlatih dan meneroka pelbagai bahan pembelajaran yang telah disediakan untuk membantu meningkatkan penguasaan English Grammar dengan lebih mudah dan menyeronokkan.
+
+📚 AKSES GRAMMAR HUB ANDA
+
+Klik pautan di bawah untuk mula menggunakan Grammar Hub:
+
+👇🏻👇🏻
+https://bijakdigital21-lang.github.io/Grammarhub./
+
+🔐 MAKLUMAT LOG MASUK
+
+Email: ${user.email}
+Password: ${user.password}
+
+📌 Sila tukar password anda di laman profile selepas berjaya log masuk ke aplikasi ini.
+
+⚠️ PENTING
+
+📌 Simpan pautan Grammar Hub ini untuk rujukan dan akses anda pada masa akan datang.
+
+Sertai group reseller kami untuk info dan sokongan berterusan.
+👇🏻👇🏻👇🏻
+https://t.me/+Z-uxVSN8A54zNTdl
+
+📱 Sekiranya anda mengalami sebarang masalah untuk membuka atau mengakses Grammar Hub, jangan risau.
+
+Hubungi kami melalui WhatsApp dan kami sedia membantu.
+
+💙 Selamat belajar!
+Semoga Grammar Hub membantu anda.`;
+
+                let cleanPhone = user.nofon.replace(/\D/g,'');
+                if(cleanPhone.startsWith('0')) {
+                    cleanPhone = '6' + cleanPhone;
+                }
+
+                const encodedMsg = encodeURIComponent(rawMsg);
+                const waLink = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-medium text-slate-800">
+                        ${user.nama}<br><span class="text-xs text-slate-400">${user.email}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="font-medium text-blue-600">${user.reseller_nama || '-'}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <a href="${waLink}" target="_blank" class="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-md border border-emerald-200 transition" title="Klik untuk hantar WhatsApp">
+                            📱 ${user.nofon} ↗
+                        </a>
+                    </td>
+                    <td class="py-3 px-4 text-xs text-slate-500">${user.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 5. Proses Approve: Cipta Akaun Automatik dalam Target Firebase (grammar-hub-6af80)
+        window.approveUser = async function(key) {
+            try {
+                const pendingRef = ref(adminDb, 'pending_users/' + key);
+                const snapshot = await get(pendingRef);
+                
+                if (!snapshot.exists()) {
+                    alert("Data tidak dijumpai.");
+                    return;
+                }
+
+                const user = snapshot.val();
+
+                if (!confirm(`Adakah anda pasti untuk approve ${user.nama}?`)) return;
+
+                // 1. Cipta akaun pengguna di dalam Firebase Auth PROJECT KEDUA (grammar-hub-6af80)[cite: 1]
+                const userCredential = await createUserWithEmailAndPassword(targetAuth, user.email, user.password);
+                const firebaseUser = userCredential.user;
+
+                // 2. Simpan maklumat profil ke Database PROJECT KEDUA (grammar-hub-6af80)[cite: 1]
+                await set(ref(targetDb, 'users/' + firebaseUser.uid), {
+                    nama: user.nama,
+                    email: user.email,
+                    nofon: user.nofon,
+                    reseller_nama: user.reseller_nama,
+                    reseller_email: user.reseller_email,
+                    reseller_nofon: user.reseller_nofon,
                     createdAt: new Date().toISOString()
                 });
 
-                console.log("Firebase pendaftaran & database berjaya disimpan.");
+                // 3. Hantar emel menggunakan EmailJS
+                const templateParams = {
+                    to_name: user.nama,
+                    to_email: user.email,
+                    password: user.password
+                };
+                await emailjs.send('service_hd5rpgc', 'template_9sh4gw2', templateParams);
+
+                // 4. Pindah data dari pending ke approved di database ADMIN (admin-f72e5)
+                await set(ref(adminDb, 'approved_users/' + key), user);
+                await remove(pendingRef);
+
+                alert(`Berjaya approve ${user.nama}! Akaun telah dicipta dalam Grammar Hub & emel telah dihantar.`);
 
             } catch (error) {
-                console.error("Ralat Firebase:", error);
-                alert("Gagal mendaftar ke Firebase: " + error.message);
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Register & Teruskan";
-                return; // Hentikan proses jika gagal daftar Firebase
+                console.error("Ralat:", error);
+                alert("Gagal memproses kelulusan: " + error.message);
             }
+        }
 
-            // 3. Cuba Hantar Emel Automatik dan tunggu hingga selesai sebelum redirect
+        // 6. Proses Reject (Padam dari Pending List Admin)
+        window.rejectUser = async function(key) {
             try {
-                const templateParams = {
-                    to_name: custNama,
-                    to_email: custEmail,
-                    password: defaultPassword
-                };
+                const pendingRef = ref(adminDb, 'pending_users/' + key);
+                const snapshot = await get(pendingRef);
 
-                // Pastikan menggunakan 'await' supaya skrip menunggu emel selesai dihantar
-                await emailjs.send('service_hd5rpgc', 'template_9sh4gw2', templateParams);
-                console.log("Emel berjaya dihantar melalui EmailJS.");
-            } catch (emailError) {
-                console.warn("Amaran: Emel gagal dihantar tetapi pendaftaran kekal berjaya.", emailError);
+                if (!snapshot.exists()) return;
+                const user = snapshot.val();
+
+                if (!confirm(`Adakah anda pasti untuk REJECT permohonan daripada ${user.nama}?`)) return;
+
+                await remove(pendingRef);
+                alert(`Permohonan ${user.nama} telah ditolak (rejected).`);
+            } catch (error) {
+                console.error("Ralat reject:", error);
+                alert("Gagal menolak permohonan: " + error.message);
             }
-
-            // 4. Bina URL target menggunakan data reseller untuk dibawa ke BCL
-            const baseUrl = "https://bijakbelajar.bcl.my/form/customer-registration";
-            const targetUrl = `${baseUrl}?name=${encodeURIComponent(resellerNama)}&email=${encodeURIComponent(resellerEmail)}&phone=${encodeURIComponent(resellerNofon)}`;
-
-            // Bawa pengguna secara automatik ke halaman tersebut selepas emel selesai diproses
-            window.location.href = targetUrl;
         }
     </script>
 </head>
-<body class="bg-slate-50 flex items-center justify-center min-h-screen py-8">
+<body class="min-h-screen flex flex-col items-center justify-center py-8 relative bg-cover bg-center bg-no-repeat" style="background-image: url('https://i.imgur.com/H46KuIJ.jpeg');">
 
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+    <div class="absolute inset-0 bg-black/40 z-0"></div>
+
+    <div class="relative z-10 bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/25 my-6">
         <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-slate-800">CUSTOMER REGISTRATION</h2>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">GRAMMAR HUB</h2>
+             <h2 class="text-xl font-semibold text-blue-600 tracking-wide mt-1">CUSTOMER REGISTRATION</h2>
         </div>
 
         <form id="regForm" onsubmit="handleRegister(event)" class="space-y-6">
             
-            <!-- PERINGATAN PENTING -->
-            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg text-sm text-amber-900 space-y-1">
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg text-sm text-amber-900 space-y-1 shadow-sm">
                 <p class="font-bold flex items-center gap-1.5">
                     <span>⚠️</span> PERINGATAN PENTING
                 </p>
-                <p>Sila pastikan semua maklumat customer diisi dengan tepat dan lengkap.</p>
-                <p>Pastikan tiada sebarang kesilapan atau typo sebelum meneruskan pendaftaran.</p>
-                <p>Pastikan alamat email yang diberikan adalah betul dan aktif.</p>
+                <p>Sila pastikan semua maklumat customer anda diisi dengan tepat dan lengkap.</p>
+                <p>Pastikan alamat email yang didaftarkan adalah betul dan aktif.</p>
             </div>
 
-            <!-- MAKLUMAT CUSTOMER -->
-            <div class="space-y-4 pb-4 border-b border-slate-200">
-                <h3 class="text-md font-semibold text-blue-700">MAKLUMAT CUSTOMER</h3>
+            <div class="space-y-4 pb-2">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider border-b pb-1">Maklumat Customer</h3>
                 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Nama Customer</label>
                     <input type="text" id="cust_nama" required 
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-slate-900 font-medium"
                         placeholder="Contoh: Siti Aminah">
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Email Customer</label>
                     <input type="email" id="cust_email" required 
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-slate-900 font-medium"
                         placeholder="customer@email.com">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">No. Telefon </label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">No. Telefon Customer</label>
                     <input type="tel" id="cust_nofon" required 
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-slate-900 font-medium"
                         placeholder="0123456789">
                 </div>
             </div>
 
-            <!-- MAKLUMAT RESELLER (DATA AKAN DI-AUTO FILL KE BCL) -->
-            <div class="space-y-4">
-                <h3 class="text-md font-semibold text-emerald-700">MAKLUMAT RESELLER</h3>
+            <div class="space-y-4 pb-2">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider border-b pb-1">Maklumat Reseller</h3>
                 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Nama Reseller</label>
-                    <input type="text" id="reseller_nama" required 
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        placeholder="Contoh: Ahmad Ali">
+                    <input type="text" id="res_nama" required 
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-slate-900 font-medium"
+                        placeholder="Contoh: Ahmad Zaki">
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Email Reseller</label>
-                    <input type="email" id="reseller_email" required 
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    <input type="email" id="res_email" required 
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-slate-900 font-medium"
                         placeholder="reseller@email.com">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">No. Telefon </label>
-                    <input type="tel" id="reseller_nofon" required 
-                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        placeholder="0189876543">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">No. Telefon Reseller</label>
+                    <input type="tel" id="res_nofon" required 
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-slate-900 font-medium"
+                        placeholder="0198765432">
                 </div>
             </div>
 
             <button type="submit" 
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-md">
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md">
                 Register & Teruskan
             </button>
         </form>
+    </div>
+
+    <div id="admin_modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden border border-slate-200">
+            
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Admin Control Panel</h3>
+                <button onclick="closeAdmin()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+
+            <div class="p-6">
+                <div id="login_section" class="space-y-4 max-w-sm mx-auto py-8 text-center">
+                    <h4 class="text-slate-700 font-medium">Log Masuk Admin</h4>
+                    <input type="email" id="admin_email" placeholder="Email Admin" 
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-800 focus:outline-none">
+                    <input type="password" id="admin_pass" placeholder="Password" 
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-800 focus:outline-none">
+                    <button onclick="checkAdminLogin()" class="w-full bg-slate-900 hover:bg-black text-white font-semibold py-2 rounded-lg transition">
+                        Log Masuk
+                    </button>
+                </div>
+
+                <div id="admin_dashboard" class="hidden space-y-4">
+                    <div class="flex gap-2 border-b pb-3">
+                        <button id="tab_pending_btn" onclick="switchTab('pending')" class="px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow">
+                            Menunggu Kelulusan (Pending)
+                        </button>
+                        <button id="tab_approved_btn" onclick="switchTab('approved')" class="px-4 py-2 text-xs font-bold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300">
+                            Telah Diluluskan (Approved)
+                        </button>
+                    </div>
+
+                    <div id="section_pending" class="space-y-3">
+                        <h4 class="font-semibold text-slate-800 text-sm">Senarai Pendaftaran Baru (Customer & Reseller)</h4>
+                        <div class="overflow-x-auto max-h-80">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                        <th class="py-2.5 px-4">Maklumat Customer</th>
+                                        <th class="py-2.5 px-4">Maklumat Reseller</th>
+                                        <th class="py-2.5 px-4">Tarikh Mohon</th>
+                                        <th class="py-2.5 px-4 text-right">Tindakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pending_table_body">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="section_approved" class="space-y-3 hidden">
+                        <h4 class="font-semibold text-slate-800 text-sm">Rekod Pelanggan & Reseller Diluluskan</h4>
+                        <div class="overflow-x-auto max-h-80">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                        <th class="py-2.5 px-4">Customer</th>
+                                        <th class="py-2.5 px-4">Reseller Bertanggungjawab</th>
+                                        <th class="py-2.5 px-4">WhatsApp Customer</th>
+                                        <th class="py-2.5 px-4">Tarikh</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="approved_table_body">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
 </body>
