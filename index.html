@@ -118,21 +118,33 @@
                     }
                 }
 
-                // Tunggu penghantaran selesai sebelum ke BCL supaya navigasi tidak membatalkan email.
+                // Cuba hantar email dengan had masa; kegagalan email tidak menghalang ke BCL.
                 // Email sedia ada tidak dihantar email atau password baharu.
                 if (firebaseUser) {
+                    let emailTimer;
                     try {
-                        await emailjs.send('service_hd5rpgc', 'template_9sh4gw2', {
-                            to_name: custNama,
-                            to_email: custEmail,
-                            password: defaultPassword
-                        });
+                        await Promise.race([
+                            emailjs.send('service_hd5rpgc', 'template_9sh4gw2', {
+                                to_name: custNama,
+                                to_email: custEmail,
+                                password: defaultPassword
+                            }),
+                            new Promise((_, reject) => {
+                                emailTimer = setTimeout(() => {
+                                    const timeoutError = new Error('Penghantaran email melebihi had masa.');
+                                    timeoutError.code = 'email/timeout';
+                                    reject(timeoutError);
+                                }, 10000);
+                            })
+                        ]);
                         newRequest.email_status = 'sent';
                         newRequest.email_sent_at = new Date().toISOString();
                     } catch (emailError) {
-                        newRequest.email_status = 'failed';
+                        newRequest.email_status = emailError.code === 'email/timeout' ? 'timeout' : 'failed';
                         console.error("Email pendaftaran gagal dihantar:", emailError);
-                        alert("Akaun berjaya didaftarkan, tetapi email belum berjaya dihantar. Anda akan diteruskan ke halaman BCL.");
+                        // Terus simpan pending dan ke BCL tanpa popup yang menghalang.
+                    } finally {
+                        clearTimeout(emailTimer);
                     }
                 }
 
