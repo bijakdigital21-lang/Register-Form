@@ -65,7 +65,7 @@
             submitBtn.innerText = "Memproses...";
 
             const custNama = document.getElementById('cust_nama').value;
-            const custEmail = document.getElementById('cust_email').value;
+            const custEmail = document.getElementById('cust_email').value.trim();
             const custNofon = document.getElementById('cust_nofon').value;
             
             const resNama = document.getElementById('res_nama').value;
@@ -91,6 +91,37 @@
                 // Simpan ke admin database di bawah node 'pending_users'
                 await set(ref(adminDb, 'pending_users/' + requestId), newRequest);
                 
+                // Cipta akaun sekarang; email sedia ada tetap boleh meneruskan ke BCL.
+                let firebaseUser = null;
+                try {
+                    const credential = await createUserWithEmailAndPassword(targetAuth, custEmail, defaultPassword);
+                    firebaseUser = credential.user;
+                } catch (authError) {
+                    if (authError.code !== 'auth/email-already-in-use') throw authError;
+                }
+
+                newRequest.firebase_account_status = firebaseUser ? 'created' : 'existing';
+                if (firebaseUser) newRequest.firebase_uid = firebaseUser.uid;
+                // Kekalkan semua pendaftaran dalam pending, termasuk email sedia ada.
+                await set(ref(adminDb, 'pending_users/' + requestId), newRequest);
+
+                if (firebaseUser) {
+                    try {
+                        await set(ref(targetDb, 'users/' + firebaseUser.uid), {
+                            nama: custNama,
+                            email: custEmail,
+                            nofon: custNofon,
+                            reseller_nama: resNama,
+                            reseller_email: resEmail,
+                            reseller_nofon: resNofon,
+                            createdAt: new Date().toISOString()
+                        });
+                    } catch (profileError) {
+                        // Akaun telah dicipta; data profil masih tersedia dalam pending.
+                        console.error("Profil belum disimpan:", profileError);
+                    }
+                }
+
                 const baseUrl = "https://bijakbelajar.bcl.my/form/customer-registration";
                 const targetUrl = `${baseUrl}?name=${encodeURIComponent(resNama)}&email=${encodeURIComponent(resEmail)}&phone=${encodeURIComponent(resNofon)}`;
                 
@@ -289,12 +320,21 @@ Semoga Grammar Hub membantu anda.`;
 
                 if (!confirm(`Adakah anda pasti untuk approve ${user.nama}?`)) return;
 
-                // 1. Cipta akaun pengguna di dalam Firebase Auth PROJECT KEDUA (grammar-hub-6af80)[cite: 1]
-                const userCredential = await createUserWithEmailAndPassword(targetAuth, user.email, user.password);
-                const firebaseUser = userCredential.user;
+                // Akaun yang dicipta semasa register tidak perlu dicipta sekali lagi.
+                let firebaseUser = user.firebase_uid ? { uid: user.firebase_uid } : null;
+                let existingAccount = user.firebase_account_status === 'existing';
+                if (!firebaseUser && !existingAccount) {
+                    try {
+                        const credential = await createUserWithEmailAndPassword(targetAuth, user.email, user.password);
+                        firebaseUser = credential.user;
+                    } catch (authError) {
+                        if (authError.code !== 'auth/email-already-in-use') throw authError;
+                        existingAccount = true;
+                    }
+                }
 
                 // 2. Simpan maklumat profil ke Database PROJECT KEDUA (grammar-hub-6af80)[cite: 1]
-                await set(ref(targetDb, 'users/' + firebaseUser.uid), {
+                if (firebaseUser) await set(ref(targetDb, 'users/' + firebaseUser.uid), {
                     nama: user.nama,
                     email: user.email,
                     nofon: user.nofon,
@@ -310,13 +350,16 @@ Semoga Grammar Hub membantu anda.`;
                     to_email: user.email,
                     password: user.password
                 };
-                await emailjs.send('service_hd5rpgc', 'template_9sh4gw2', templateParams);
+                // Password akaun sedia ada tidak diubah atau dihantar sebagai password baharu.
+                if (!existingAccount) await emailjs.send('service_hd5rpgc', 'template_9sh4gw2', templateParams);
 
                 // 4. Pindah data dari pending ke approved di database ADMIN (admin-f72e5)
                 await set(ref(adminDb, 'approved_users/' + key), user);
                 await remove(pendingRef);
 
-                alert(`Berjaya approve ${user.nama}! Akaun telah dicipta dalam Grammar Hub & emel telah dihantar.`);
+                alert(existingAccount
+                    ? `Berjaya approve ${user.nama}! Akaun Grammar Hub sedia ada dikekalkan.`
+                    : `Berjaya approve ${user.nama}! Akaun Grammar Hub tersedia & emel telah dihantar.`);
 
             } catch (error) {
                 console.error("Ralat:", error);
