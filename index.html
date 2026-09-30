@@ -22,7 +22,7 @@
   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, update, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, push, set, update, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // 1. Firebase Config untuk Paparan Admin & Pending List (admin-f72e5)
         const adminFirebaseConfig = {
@@ -73,7 +73,7 @@
             const resNofon = document.getElementById('res_nofon').value;
 
             const defaultPassword = "GH548257af";
-            const requestId = 'req_' + Date.now();
+            const requestId = push(ref(adminDb, 'pending_users')).key;
 
             const newRequest = {
                 id: requestId,
@@ -88,9 +88,6 @@
             };
 
             try {
-                // Simpan ke admin database di bawah node 'pending_users'
-                await set(ref(adminDb, 'pending_users/' + requestId), newRequest);
-                
                 // Cipta akaun sekarang; email sedia ada tetap boleh meneruskan ke BCL.
                 let firebaseUser = null;
                 try {
@@ -103,8 +100,6 @@
                 newRequest.firebase_account_status = firebaseUser ? 'created' : 'existing';
                 if (firebaseUser) newRequest.firebase_uid = firebaseUser.uid;
                 newRequest.email_status = firebaseUser ? 'sending' : 'skipped_existing';
-                // Kekalkan semua pendaftaran dalam pending, termasuk email sedia ada.
-                await set(ref(adminDb, 'pending_users/' + requestId), newRequest);
 
                 if (firebaseUser) {
                     try {
@@ -118,7 +113,7 @@
                             createdAt: new Date().toISOString()
                         });
                     } catch (profileError) {
-                        // Akaun telah dicipta; data profil masih tersedia dalam pending.
+                        // Akaun telah dicipta; data profil akan disimpan dalam pending.
                         console.error("Profil belum disimpan:", profileError);
                     }
                 }
@@ -139,15 +134,12 @@
                         console.error("Email pendaftaran gagal dihantar:", emailError);
                         alert("Akaun berjaya didaftarkan, tetapi email belum berjaya dihantar. Anda akan diteruskan ke halaman BCL.");
                     }
-                    try {
-                        await update(ref(adminDb, 'pending_users/' + requestId), {
-                            email_status: newRequest.email_status,
-                            ...(newRequest.email_sent_at ? { email_sent_at: newRequest.email_sent_at } : {})
-                        });
-                    } catch (statusError) {
-                        console.error("Status email belum disimpan:", statusError);
-                    }
                 }
+
+                // Rules membenarkan pelanggan mencipta rekod baru sahaja.
+                // Simpan sekali dengan status akaun dan keputusan email yang lengkap.
+                // Jangan set/update rekod pending yang sama selepas ia dicipta.
+                await set(ref(adminDb, 'pending_users/' + requestId), newRequest);
 
                 const baseUrl = "https://bijakbelajar.bcl.my/form/customer-registration";
                 const targetUrl = `${baseUrl}?name=${encodeURIComponent(resNama)}&email=${encodeURIComponent(resEmail)}&phone=${encodeURIComponent(resNofon)}`;
